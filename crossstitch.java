@@ -12,9 +12,9 @@ import java.util.HashMap;
 import javax.imageio.ImageIO;
 import org.json.*;
 
-public class crossstitch {
+public class Crossstitch {
 
-    private final HashMap<String, Color> colours = new HashMap<>();
+    private final HashMap<String, Color> colours = new HashMap<String, Color>();
     private final Color FRAME_COLOR = new Color(100, 100, 100, 255);
     private final int RATIO = 15;
     private String folderName = "";
@@ -28,6 +28,10 @@ public class crossstitch {
 
     private final Font symbol = new Font("Roboto", Font.BOLD, 15);
     private final Font symbolLarge = new Font("Roboto", Font.BOLD, 20);
+
+    protected HashMap<String, Color> returnColours() {
+        return colours;
+    }
 
     private int[][] rowScroller(int[][] data, BufferedImage im, int y, int y2, boolean borderLayer, int[] pix,
             int newPatternX) {
@@ -88,7 +92,6 @@ public class crossstitch {
     }
 
     public void generateImage(boolean image) throws IOException {
-        System.out.println("HUH");
         if (!folderName.isEmpty()) {
             colours.clear();
             BufferedImage im = ImageIO.read(Paths.get(files.get("Original")).toFile());
@@ -163,18 +166,12 @@ public class crossstitch {
                         draw.setColor((pixelColor.getRed() + pixelColor.getGreen() + pixelColor.getBlue()) / 3 >= 125
                                 ? Color.BLACK
                                 : Color.WHITE);
-                        draw.drawString(label, x * (RATIO + 1), (y + 1) * (RATIO + 1));
+                        draw.drawString(label, (int) ((x + 0.25) * (RATIO + 1)), (y + 1) * (RATIO + 1));
                     }
                 }
-                System.out.println("WE DID IT");
-                ImageIO.write(img, "png", new File(folderName + "pattern.png"));
+                ImageIO.write(img, "png", new File(folderName + "/pattern.png"));
             }
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        crossstitch p = new crossstitch();
-        p.setFolderName("./Projects/Curran/");
-        p.generateImage(true);
-    }
 }
