@@ -1,33 +1,37 @@
 import javax.swing.*;
-import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.json.*;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
 public class CurraStitcherUI extends JFrame {
 
     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-    private Color bg0 = Color.decode("0x272443");
-    private Color bg1 = Color.decode("0xE9B074");
-    private Color bg2 = Color.decode("0xA9253D");
-    private Color fg0 = Color.decode("0xFFFFFF");
-    private Color borderColor = Color.decode("0x562D2B");
+
+    // Colours for the UI
+    private Color bg0 = Color.decode("0x272443"); // Dark Blue
+    private Color bg1 = Color.decode("0xe9b074"); // Yellow/Gold
+    private Color bg2 = Color.decode("0xa9253d"); // Red
+    private Color fg0 = Color.decode("0xffffff"); // White
+    private Color borderColor = Color.decode("0x562D2B"); // Brown
 
     private JLabel projectNameLabel = new JLabel("Project Folder");
     private JLabel projectName = new JLabel();
+    private JLabel pixelColourLabel = new JLabel("Pixel Colours (HEX)");
+
+    private JLabel DMCColourLabel = new JLabel("DMC Colours");
 
     private JPanel coloursPanel = new JPanel();
+    private JPanel buttonsPanel = new JPanel();
+    private JPanel pixelColourPanel = new JPanel();
 
     private JButton directoryButton = new JButton(new ImageIcon("./Images/folders.png"));
     private JButton openFolderButton = new JButton("Open Folder");
@@ -40,9 +44,13 @@ public class CurraStitcherUI extends JFrame {
     private final int BORDER = screenSize.width / 64;
 
     final int width = screenSize.width / 8 * 5;
-    final int halfWidth = (width - 3 * BORDER) / 2;
+    final int leftHalf = (width - 3 * BORDER) / 3 * 2;
+    final int rightHalf = (width - 3 * BORDER) / 3;
     final int height = screenSize.width / 8 * 3;
     final int fullHeight = (int) (height * 1.0 - BORDER * 3.0);
+    final int halfHeight = (int) (height - 5.0 * BORDER) / 2;
+
+    boolean enabled = false;
 
     final int unit = width / 8;
 
@@ -73,44 +81,51 @@ public class CurraStitcherUI extends JFrame {
     public void paint(Graphics g) {
         super.paint(g);
 
-        projectNameLabel.setForeground(fg0);
-        projectNameLabel.setBounds(BORDER, BORDER, width / 16 * 7, BORDER * 2);
-
-        projectName.setForeground(fg0);
+        setLabel(projectNameLabel, fg0, BORDER, BORDER, width / 16 * 7, BORDER * 2);
+        setLabel(projectName, fg0, BORDER, BORDER * 3, leftHalf - BORDER * 2, BORDER * 2);
         projectName.setBackground(bg2);
         projectName.setOpaque(true);
         projectName.setBorder(BorderFactory.createLineBorder(borderColor, 2));
-        projectName.setBounds(BORDER, BORDER * 3, halfWidth, BORDER * 2);
 
-        setButton(directoryButton, fg0, bg1, BORDER, BORDER * 5, BORDER * 2, BORDER * 2);
-        setButton(openFolderButton, fg0, bg1, BORDER, 250, 150, 32);
-        setButton(generateJSONButton, fg0, bg1, BORDER, 300, 150, 32);
-        setButton(generatePatternButton, fg0, bg1, BORDER, 350, 150, 32);
+        setButton(directoryButton, fg0, bg1, leftHalf - BORDER, BORDER * 3, BORDER * 2, BORDER * 2);
 
-        coloursPanel.setBounds((int) (width / 2.0 + BORDER / 2.0), BORDER, halfWidth,
-                fullHeight);
+        // setPanelEnabled(buttonsPanel, enabled);
+        setPanel(buttonsPanel, fg0, BORDER, (height + BORDER) / 2, leftHalf, halfHeight);
 
-        coloursPanel.setBackground(bg2);
+        setButton(openFolderButton, fg0, bg1, BORDER, BORDER, 150, BORDER * 2);
+        setButton(generateJSONButton, fg0, bg1, BORDER, BORDER * 7 / 2, 150, BORDER * 2);
+        setButton(generatePatternButton, fg0, bg1, BORDER, BORDER * 6, 150, BORDER * 2);
+
+        setPanel(coloursPanel, bg2, leftHalf + 2 * BORDER, BORDER, rightHalf, fullHeight);
+
+        setLabel(pixelColourLabel, fg0, BORDER, BORDER, rightHalf - 2 * BORDER, BORDER);
 
         coloursMenu.setBackground(bg1);
         coloursMenu.setForeground(fg0);
         coloursMenu.setVisible(true);
-
         coloursMenu.setPrototypeDisplayValue("XXXXXXXXXXXXXXXXXXXXX");
         coloursMenu.setEditable(false);
         coloursMenu.setUI(ComboBoxUI.createUI(coloursMenu, bg2));
+        coloursMenu.setBounds(BORDER, BORDER * 3, rightHalf - 2 * BORDER, BORDER);
 
-        coloursMenu.setBounds(0, 50, 128, 32);
+        setPanel(pixelColourPanel, null, BORDER, BORDER * 5, rightHalf - 2 * BORDER, BORDER * 2);
+        if (coloursMenu.getSelectedItem() != null)
+            pixelColourPanel.setBackground(hextoColor(coloursMenu.getSelectedItem().toString()));
 
-        // Add components to the JFrame
+        setLabel(DMCColourLabel, fg0, BORDER, BORDER * 8, rightHalf - 2 * BORDER, BORDER);
+
+        // Add components to the JFrame or respective JPanels
         add(projectNameLabel);
         add(projectName);
         add(directoryButton);
-        add(openFolderButton);
-        add(generateJSONButton);
-        add(generatePatternButton);
-
+        buttonsPanel.add(openFolderButton);
+        buttonsPanel.add(generateJSONButton);
+        buttonsPanel.add(generatePatternButton);
+        add(buttonsPanel);
+        coloursPanel.add(pixelColourLabel);
         coloursPanel.add(coloursMenu);
+        coloursPanel.add(pixelColourPanel);
+        coloursPanel.add(DMCColourLabel);
         add(coloursPanel);
     }
 
@@ -136,7 +151,61 @@ public class CurraStitcherUI extends JFrame {
         });
     }
 
+    private void setLabel(JLabel label, Color fg, int x, int y, int w, int h) {
+        label.setForeground(fg0);
+        label.setBounds(x, y, w, h);
+    }
+
+    private void setPanel(JPanel panel, Color fg, int x, int y, int w, int h) {
+        panel.setBackground(fg);
+        panel.setLayout(null);
+        panel.setBounds(x, y, w, h);
+    }
+
+    // private void setPanelEnabled(JPanel panel, Boolean isEnabled) {
+    // panel.setEnabled(isEnabled);
+
+    // Component[] components = panel.getComponents();
+
+    // for (Component component : components) {
+    // System.out.println(component.getName());
+    // // if (component instanceof JPanel) {
+    // // setPanelEnabled((JPanel) component, isEnabled);
+    // // }
+    // component.setEnabled(isEnabled);
+    // }
+    // }
+
+    private Color hextoColor(String hex) {
+        hex = hex.replace("#", "0x");
+        return Color.decode(hex);
+    }
+
+    private void getColours() {
+        // Load colours from JSON
+        File coloursFile = new File(projectName.getText() + "/colours.json");
+        if (coloursFile.exists()) {
+            try {
+                JSONObject jsonObject = new JSONObject(new JSONTokener(new FileReader(coloursFile)));
+                Iterator<?> keys = jsonObject.keys();
+                coloursMenu.removeAllItems();
+                while (keys.hasNext()) {
+                    coloursMenu.addItem((String) keys.next());
+                }
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+
     private void buttonActions() {
+        coloursMenu.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                repaint();
+            }
+        });
+
         directoryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -147,30 +216,12 @@ public class CurraStitcherUI extends JFrame {
                 if (returnValue == JFileChooser.APPROVE_OPTION) {
                     File selectedDirectory = fileChooser.getSelectedFile();
                     try {
-                        // Path p =
-                        // Paths.get(fileChooser.getCurrentDirectory().getCanonicalPath()).getParent()
-                        // .relativize(Paths.get(selectedDirectory.getCanonicalPath()));
-                        // projectName.setText("./" + p);
-                        // setFolderName("./" + p);
                         setFolderName(selectedDirectory.getAbsolutePath().replace(folderRegex, replace));
                     } catch (Exception e1) {
-                        e1.printStackTrace();
+                        System.out.println(e1.getMessage());
                     }
-
-                    // Load colours from JSON
-                    File coloursFile = new File(selectedDirectory.getAbsolutePath() + "/colours.json");
-                    if (coloursFile.exists()) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(new JSONTokener(new FileReader(coloursFile)));
-                            Iterator<?> keys = jsonObject.keys();
-                            coloursMenu.removeAllItems();
-                            while (keys.hasNext()) {
-                                coloursMenu.addItem((String) keys.next());
-                            }
-                        } catch (Exception e1) {
-                            e1.printStackTrace();
-                        }
-                    }
+                    getColours();
+                    repaint();
                 }
             }
 
@@ -194,22 +245,21 @@ public class CurraStitcherUI extends JFrame {
                 System.out.println(projectName.getText());
                 File f = new File(projectName.getText() + "/colours.json");
                 JSONObject jsonObject = new JSONObject();
-                if (f.exists()) {
-                    System.out.println("UWU");
-                } else {
+
+                // generate a new JSON with all the pixel colours from the image
+                if (!f.exists()) {
                     try {
                         crossstitch.generateImage(false);
                         HashMap<String, Color> colours = crossstitch.returnColours();
                         for (String name : colours.keySet()) {
-                            String key = name.toString();
-                            System.out.println(key);
-                            jsonObject.put(key, "");
+                            jsonObject.put(name.toString(), "");
                         }
                         FileWriter file = new FileWriter(projectName.getText() + "/colours.json");
                         file.write(jsonObject.toString(3));
                         file.close();
+                        getColours(); // add the colours to the dropdown
+
                     } catch (Exception e1) {
-                        // TODO Auto-generated catch block
                         e1.printStackTrace();
                     }
                 }
