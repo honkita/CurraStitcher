@@ -91,6 +91,11 @@ public class Crossstitch {
         return data;
     }
 
+    /**
+     * 
+     * @param image
+     * @throws IOException
+     */
     public void generateImage(boolean image) throws IOException {
         if (!folderName.isEmpty()) {
             colours.clear();
@@ -150,7 +155,6 @@ public class Crossstitch {
                                         i * legendDim + legendDim / 2);
                             }
                         } catch (FileNotFoundException | JSONException e) {
-                            System.out.println("UWU");
                         }
 
                     }
