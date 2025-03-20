@@ -1,13 +1,16 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.util.*;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Taskbar;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -56,10 +59,13 @@ public class CurraStitcherUI extends JFrame {
 
     private final Crossstitch crossstitch = new Crossstitch();
 
+    private final Taskbar taskbar = Taskbar.getTaskbar();
+
     private JSONObject presets = null;
 
-    private final int BORDER = screenSize.width / 64;
+    private boolean newLoad = false;
 
+    private final int BORDER = screenSize.width / 64;
     private final int width = screenSize.width / 8 * 5;
     private final int leftHalf = (width - 3 * BORDER) / 3 * 2;
     private final int rightHalf = (width - 3 * BORDER) / 3;
@@ -86,8 +92,23 @@ public class CurraStitcherUI extends JFrame {
         setLayout(null);
         setVisible(true);
 
+        BufferedImage image;
+
+        try {
+            image = ImageIO.read(new File("./Assets/icon.png"));
+            taskbar.setIconImage(image);
+            setIconImage(image);
+        } catch (final IOException e) {
+            System.out.println("IO Error");
+        } catch (final UnsupportedOperationException e) {
+            System.out.println("The os does not support: 'taskbar.setIconImage'");
+        } catch (final SecurityException e) {
+            System.out.println("There was a security exception for: 'taskbar.setIconImage'");
+        }
+
         buttonActions();
         repaint();
+
     }
 
     /**
@@ -154,7 +175,13 @@ public class CurraStitcherUI extends JFrame {
                 presetDMCColourPanel.setOpaque(true);
                 presetDMCColourPanel.setBackground(hextoColor(hexColour));
                 presetDMCColourHexLabel.setText(hexColour);
-                statusLabel.setText("Thread colour changed successfully");
+                if (newLoad) {
+                    newLoad = false;
+                    statusLabel.setText("Colours loaded");
+                } else {
+                    statusLabel.setText("Thread colour changed successfully");
+                }
+
             } catch (Exception e) {
                 presetDMCColourLabel.setText("No Colour");
                 presetDMCColourPanel.setOpaque(false);
@@ -388,7 +415,9 @@ public class CurraStitcherUI extends JFrame {
                         System.out.println(e1.getMessage());
                     }
                     getColours();
+                    newLoad = true;
                     repaint();
+
                 }
             }
 

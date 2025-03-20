@@ -2,6 +2,8 @@
 
 # CurraStitcher
 
+![](https://raw.githubusercontent.com/honkita/MD-Links/main/Pixel_Maintained.svg)
+
 ## About
 
 This is an application used to generate cross stitch patterns with an image. The image that is expected is supposed to be pixel art.
